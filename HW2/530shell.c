@@ -80,7 +80,7 @@ void parseCommand(char input[], int* i){
 	
 	/*use stat function to loop through all the possible path
 	once find the valid one return the valid */
-	char* output_path;
+	char* output_path = NULL;
 	int p;
 	int valid = 0;
 	for(p = 0; p < path_num; p++){
@@ -90,12 +90,16 @@ void parseCommand(char input[], int* i){
 		strcpy(path, pathes[p]);
 		strcat(path, "/");
 		strcat(path, argv[0]);
-		// printf("%s\n", path);
+                /*for debugging*/
+		//printf("%s\n", path);
 		if(stat(path, &stbuf) == 0){
 			/*valid path*/
 			valid = 1;
+                        if(output_path == NULL){
+                          output_path = (char*) malloc(len * sizeof(char));
+                        }
 			strcpy(output_path, path);
-			break;
+                        break;
 		}
 	}
 	/*if no path is valid after iteration, exit and output error msg*/
