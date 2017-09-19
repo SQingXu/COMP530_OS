@@ -1,4 +1,4 @@
-//Author: Siqing Xu
+// Author: Siqing Xu
 //Honor Pledge: Siqing Xu
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,9 +20,9 @@
 
 char prompt[3] = "% ";
 char input[SIZE];
-int pid;
 
-static void sigHandler(int sig);
+void sigZHandler(int sig);
+void sigZPHandler(int sig);
 void parsePath(char* pathes[], char* comb, int* path_num);
 void parseCommand(char input[], int* i){
 	/*set variables for the parsing*/
@@ -100,7 +100,7 @@ void parseCommand(char input[], int* i){
 	}
 	/*if no path is valid after iteration, exit and output error msg*/
 	if(valid == 0){
-		printf("Failed: file not found\n");
+		printf("Failed: invalid path\n");
 		exit(1);
 	}
 	
@@ -120,9 +120,6 @@ int main(){
 	/*print out the first prompt*/
 	printf("%s", prompt);
 
-	signal(SIGINT, sigHandler);
-	signal(SIGTSTP, sigHandler);
-
 	while((ch = getchar()) != EOF){
 		if(i == SIZE){
 			/*command length reach the size limit*/
@@ -137,12 +134,7 @@ int main(){
 		if(ch == NEWLINE){
 			/*reach the end of one line of command
 			start to fork*/
-			//int pid;
-			
-			/*before the child process terminates
-			control-z: define a handler which does nothing for parent process, sigaction
-			control-c: ignore the signal*/
-			
+			int pid;
 			if((pid = fork()) < 0){
 				/*unsuccessful fork, go to next prompt*/
 				printf("Failed: unsuccessful fork\n");
@@ -151,16 +143,38 @@ int main(){
 				continue;
 			}
 
-
+			/*before the child process terminates
+			control-z: define a handler which does nothing for parent process, sigaction
+			control-c: ignore the signal*/
+			//printf("parent process: set signal handling settings\n");
+			signal(SIGINT, SIG_IGN);
+			//signal(SIGTSTP, SIG_IGN);
 			if(pid == 0){
 				/*child process*/
-				/*Don't ignore control-c and control-z in child process*/
+				/*Don't ignore control-c and control-z in child process
+				Define handler when receive control-z in child process;
+				sigaction function
+				For control-c simply set it back to default
+				signal function
+				*/
+				// struct sigaction sa;
+				// sa.sa_handler = sigZHandler;
+				// sa.sa_flags = 0;
+				// sigemptyset(&sa.sa_mask);
+				// if(sigaction(SIGTSTP, &sa, NULL) == -1){
+				// 	printf("Error in setting control-z\n");
+				// }
+				//signal(SIGTSTP, SIG_DFL);
+				//signal(SIGINT, SIG_DFL);
 				parseCommand(input, &i);
 			}else{
 				/*parent process
 				wait for child process to terminate and start new prompt*/
 				wait(NULL);
 				/*after child process exit, set both signals to default*/
+				//printf("child process finishes, set back to default\n");
+				//signal(SIGINT, SIG_DFL);
+				//signal(SIGTSTP, SIG_DFL);
 				i = 0;
 				printf("%s", prompt);
 				continue;
@@ -212,26 +226,11 @@ void parsePath(char* pathes[], char* comb, int* path_num){
 	return;
 }
 
-static void sigHandler(int sig){
-	switch(sig){
-		/*Ctrl-C*/
-		case SIGINT:
-		if(pid != 0){
-			kill(pid, SIGINT);
-		}
-		break;
-		/*Ctrl-Z*/
-		case SIGTSTP:
-		// printf("Process %d receive SIGTSTP signal\n",getpid());
-		// fflush(stdout);
-		if(pid != 0){
-			kill(pid, SIGINT);
-		}
-		break;
-		default: break;
-	}
-	return;
-}
+// void sigZHandler(int sig){
+// 	if(sig == SIGTSTP){
+// 		kill(getpid(), SIGTERM);
+// 	}
+// }
 
 // void sigZPHandler(int sig){
 // 	if(sig == SIGTSTP){

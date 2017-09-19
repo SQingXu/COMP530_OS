@@ -1,7 +1,6 @@
 //Author: Siqing Xu
 //Honor Pledge: Siqing Xu
 #include <stdio.h>
-#include <stdlib.h>
 
 #define SIZE 81
 #define NEWLINE  '\n'
@@ -13,7 +12,6 @@ void clearAndPrint(char arr[],int* i){
 	arr[SIZE - 1] = NEWLINE;
 	printf("%.*s",SIZE, arr);
 	*i = 0;
-    exit(0);
 	return;
 }
 
